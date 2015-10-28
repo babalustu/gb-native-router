@@ -51,6 +51,10 @@ var Router = React.createClass({
     this.refs.navigator.replace(route);
   },
 
+    resetRoute: function(){
+        this.refs.navigator.popToTop();
+    },
+
   setRightProps: function(props) {
     this.setState({ rightProps: props });
   },

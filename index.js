@@ -45,7 +45,7 @@ var Router = React.createClass({
     route.index = this.state.route.index + 1 || 1;
     navigator.push(route);
   },
-  
+
   replaceRoute: function(route) {
     route.index = this.state.route.index + 0 || 0;
     this.refs.navigator.replace(route);
@@ -173,6 +173,10 @@ var Router = React.createClass({
   },
 
   render: function() {
+    var sceneConfig = {
+      ...Navigator.SceneConfigs.FloatFromRight,
+      gestures:null,
+    };
 
     // Status bar color
     if (Platform.OS === 'ios') {
@@ -214,6 +218,9 @@ var Router = React.createClass({
         navigationBar={navigationBar}
         renderScene={this.renderScene}
         onDidFocus={this.onDidFocus}
+        configureScene={(route) => {
+            return sceneConfig;
+        }}
       />
     )
   }

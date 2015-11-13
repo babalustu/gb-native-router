@@ -150,9 +150,10 @@ var Router = React.createClass({
     return (
       <View
         style={[styles.container, this.props.bgStyle, extraStyling, {marginTop: margin}]}
-        onStartShouldSetResponder={didStartDrag}
-        onResponderMove={didMoveFinger}
-        onResponderTerminationRequest={preventDefault}>
+        //onStartShouldSetResponder={didStartDrag}
+        //onResponderMove={didMoveFinger}
+        //onResponderTerminationRequest={preventDefault}
+      >
         <Content
           name={route.name}
           index={route.index}

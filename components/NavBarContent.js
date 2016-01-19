@@ -1,39 +1,38 @@
 'use strict';
 
 var React = require('react-native');
-var tweenState = require('react-tween-state'); // Animate header
-
 var NavButton = require('./NavButton');
 
 var {
   StyleSheet,
   Text,
-  View
+  View,
+  Animated,
+  Easing
 } = React;
-
 
 var NavBarContent = React.createClass({
 
-  mixins: [tweenState.Mixin],
-
   getInitialState: function() {
     return {
-      opacity: this.props.willDisappear ? 1 : 0
+      opacity: this.props.willDisappear ? new Animated.Value(1) : new Animated.Value(0)
     };
   },
 
   componentWillReceiveProps: function(newProps) {
     if (newProps.route !== this.props.route) {
-      this.setState({
-        opacity: this.props.willDisappear ? 1 : 0
-      });
+      this.state.opacity.setValue(this.props.willDisappear ? 1 : 0);
 
       setTimeout(() => {
-        this.tweenState('opacity', {
-          easing: tweenState.easingTypes.easeInOutQuad,
-          duration: 200,
-          endValue: 1
-        });
+        Animated.timing(
+          this.state.opacity,
+          {
+            fromValue: this.props.willDisappear ? 1 : 0,
+            toValue: this.props.willDisappear ? 0 : 1,
+            duration: 300,
+            easing: Easing.easeOutQuad
+          }
+        ).start();
       }, 0);
     }
   },
@@ -54,22 +53,28 @@ var NavBarContent = React.createClass({
 
   render() {
     var transitionStyle = {
-      opacity: this.getTweeningValue('opacity'),
-    };
-
-    var leftCorner;
-    var rightCorner;
-    var titleComponent;
-
+        opacity: this.state.opacity,
+      },
+      leftCorner,
+      LeftCorner,
+      rightCorner,
+      RightCorner,
+      titleComponent,
+      leftCornerContent,
+      rightCornerContent,
+      titleContent,
+      TitleComponent,
+      trans,
+      width,
+      color;
 
     /**
      * Set leftCorner
      * (defaults to "Back"-button for routes with index > 0)
      */
-    var leftCornerContent;
 
     if (this.props.route.leftCorner) {
-      var LeftCorner = this.props.route.leftCorner;
+      LeftCorner = this.props.route.leftCorner;
       leftCornerContent = <LeftCorner toRoute={this.goForward} customAction={this.customAction} {...this.props.leftProps} {...this.props.route.leftCornerProps} />;
     } else if (this.props.route.index > 0) {
       leftCornerContent = <NavButton onPress={this.goBack} backButtonComponent={this.props.backButtonComponent} />;
@@ -84,10 +89,9 @@ var NavBarContent = React.createClass({
     /**
      * Set rightCorner
      */
-    var rightCornerContent;
 
     if (this.props.route.rightCorner || this.props.rightCorner) {
-      var RightCorner = this.props.route.rightCorner || this.props.rightCorner;
+      RightCorner = this.props.route.rightCorner || this.props.rightCorner;
       rightCornerContent = <RightCorner toRoute={this.goForward} customAction={this.customAction} {...this.props.rightProps} {...this.props.route.rightCornerProps} />;
     }
 
@@ -100,10 +104,10 @@ var NavBarContent = React.createClass({
     /**
      * Set title message
      */
-    var titleContent;
+
 
     if (this.props.route.titleComponent) {
-      var TitleComponent = this.props.route.titleComponent;
+      TitleComponent = this.props.route.titleComponent;
       titleContent = <TitleComponent {...this.props.titleProps} />;
     } else {
       titleContent = (
@@ -120,19 +124,19 @@ var NavBarContent = React.createClass({
     );
 
     if(this.props.route.trans === true)
-      var trans = { backgroundColor: 'transparent', borderBottomWidth: 0 };
+      trans = { backgroundColor: 'transparent', borderBottomWidth: 0 };
     else
-      var trans = {};
+      trans = {};
 
-    var width = this.props.borderBottomWidth ? this.props.borderBottomWidth : 0;
-    var color = this.props.borderColor ? this.props.borderColor : null;
+    width = this.props.borderBottomWidth ? this.props.borderBottomWidth : 0;
+    color = this.props.borderColor ? this.props.borderColor : null;
 
     return (
-      <View style={[styles.navbar, transitionStyle, this.props.route.headerStyle,{borderBottomWidth: width, borderColor: color}, trans]}>
+      <Animated.View style={[styles.navbar, transitionStyle, this.props.route.headerStyle,{borderBottomWidth: width, borderColor: color}, trans]}>
         {leftCorner}
         {titleComponent}
         {rightCorner}
-      </View>
+      </Animated.View>
     );
   }
 });

@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react-native');
+var {EventEmitter} = require('fbemitter');
 
 var NavBarContainer = require('./components/NavBarContainer');
 
@@ -12,66 +13,63 @@ var {
   Platform
 } = React;
 
-
-var Router = React.createClass({
-
-  getInitialState: function() {
-    return {
+class Router extends React.Component{
+  constructor(props) {
+    super(props);
+    this.state = {
       route: {
         name: null,
         index: null
-      },
-      dragStartX: null,
-      didSwitchView: null,
-    }
-  },
+      }
+    };
+    this.emitter = new EventEmitter();
+  }
 
-  /*
-   * This changes the title in the navigation bar
-   * It should preferrably be called for "onWillFocus" instad >
-   * > but a recent update to React Native seems to break the animation
-   */
-  onDidFocus: function(route) {
+  onWillFocus(route) {
     this.setState({ route: route });
-  },
+    this.emitter.emit('willFocus', route.name);
+  }
 
-  onBack: function(navigator) {
+  onDidFocus(route) {
+    this.emitter.emit('didFocus', route.name);
+  }
+
+  onBack(navigator) {
     if (this.state.route.index > 0) {
       navigator.pop();
     }
-  },
+  }
 
-  onForward: function(route, navigator) {
+  onForward(route, navigator) {
     route.index = this.state.route.index + 1 || 1;
     navigator.push(route);
-  },
+  }
 
-  replaceRoute: function(route) {
-    route.index = this.state.route.index + 0 || 0;
-    this.refs.navigator.replace(route);
-  },
-
-    resetRoute: function(){
+    resetRoute(){
         this.refs.navigator.popToTop();
-    },
+    }
 
-  setRightProps: function(props) {
+  setRightProps(props) {
     this.setState({ rightProps: props });
-  },
+  }
 
-  setLeftProps: function(props) {
+  setLeftProps(props) {
     this.setState({ leftProps: props });
-  },
+  }
 
-  setTitleProps: function(props) {
+  setTitleProps(props) {
     this.setState({ titleProps: props });
-  },
+  }
 
-  customAction: function(opts) {
+  customAction(opts) {
     this.props.customAction(opts);
-  },
+  }
 
-  renderScene: function(route, navigator) {
+  configureScene(route) {
+    return route.sceneConfig || Navigator.SceneConfigs.FloatFromRight;
+  }
+
+  renderScene(route, navigator) {
 
     var goForward = function(route) {
       route.index = this.state.route.index + 1 || 1;
@@ -83,12 +81,17 @@ var Router = React.createClass({
       navigator.replace(route);
     }.bind(this);
 
+    var resetToRoute = function(route) {
+      route.index = 0;
+      navigator.resetTo(route);
+    }.bind(this);
+
     var goBackwards = function() {
       this.onBack(navigator);
     }.bind(this);
 
     var goToFirstRoute = function() {
-      navigator.popToTop()
+      navigator.popToTop();
     };
 
     var setRightProps = function(props) {
@@ -107,31 +110,6 @@ var Router = React.createClass({
       this.customAction(opts);
     }.bind(this);
 
-    var didStartDrag = function(evt) {
-      var x = evt.nativeEvent.pageX;
-      if (x < 28) {
-        this.setState({
-          dragStartX: x,
-          didSwitchView: false
-        });
-        return true;
-      }
-    }.bind(this);
-
-    // Recognize swipe back gesture for navigation
-    var didMoveFinger = function(evt) {
-      var draggedAway = ((evt.nativeEvent.pageX - this.state.dragStartX) > 30);
-      if (!this.state.didSwitchView && draggedAway) {
-        this.onBack(navigator);
-        this.setState({ didSwitchView: true });
-      }
-    }.bind(this);
-
-    // Set to false to prevent iOS from hijacking the responder
-    var preventDefault = function(evt) {
-      return true;
-    };
-
     var Content = route.component;
 
     // Remove the margin of the navigation bar if not using navigation bar
@@ -140,27 +118,27 @@ var Router = React.createClass({
       extraStyling.marginTop = 0;
     }
 
-    if(route.trans === true)
-      var margin = 0
-    else if (this.props.hideNavigationBar === true)
-      var margin = this.props.noStatusBar ? 0 : 20
-    else
-      var margin = 64
+    var margin;
+    if(route.trans) {
+      margin = 0;
+    } else if (this.props.hideNavigationBar || route.hideNavigationBar) {
+      margin = this.props.noStatusBar ? 0 : 20;
+    } else {
+      margin = 64;
+    }
 
     return (
       <View
-        style={[styles.container, this.props.bgStyle, extraStyling, {marginTop: margin}]}
-        //onStartShouldSetResponder={didStartDrag}
-        //onResponderMove={didMoveFinger}
-        //onResponderTerminationRequest={preventDefault}
-      >
+        style={[styles.container, this.props.bgStyle, extraStyling, {marginTop: margin}]}>
         <Content
           name={route.name}
           index={route.index}
           data={route.data}
           toRoute={goForward}
           toBack={goBackwards}
+          routeEmitter={this.emitter}
           replaceRoute={replaceRoute}
+          resetToRoute={resetToRoute}
           reset={goToFirstRoute}
           setRightProps={setRightProps}
           setLeftProps={setLeftProps}
@@ -169,19 +147,18 @@ var Router = React.createClass({
           {...route.passProps}
         />
       </View>
-    )
+    );
+  }
 
-  },
-
-  render: function() {
+  render() {
     var sceneConfig = {
-      ...Navigator.SceneConfigs.FloatFromRight,
-      gestures:null,
+        ...Navigator.SceneConfigs.FloatFromRight,
+        gestures:null,
     };
-
+    var navigationBar;
     // Status bar color
     if (Platform.OS === 'ios') {
-      if (this.props.statusBarColor === "black") {
+      if (this.props.statusBarColor === 'black') {
         StatusBarIOS.setStyle(0);
       } else {
         StatusBarIOS.setStyle(1);
@@ -189,8 +166,6 @@ var Router = React.createClass({
     } else if (Platform.OS === 'android') {
       // no android version yet
     }
-
-    var navigationBar;
 
     if (!this.props.hideNavigationBar) {
       navigationBar =
@@ -203,29 +178,30 @@ var Router = React.createClass({
         titleStyle={this.props.titleStyle}
         borderBottomWidth={this.props.borderBottomWidth}
         borderColor={this.props.borderColor}
-        toRoute={this.onForward}
-        toBack={this.onBack}
+        toRoute={this.onForward.bind(this)}
+        toBack={this.onBack.bind(this)}
         leftProps={this.state.leftProps}
         rightProps={this.state.rightProps}
         titleProps={this.state.titleProps}
-        customAction={this.customAction}
+        customAction={this.customAction.bind(this)}
       />
     }
 
     return (
       <Navigator
-        ref="navigator"
+        ref='navigator'
         initialRoute={this.props.firstRoute}
         navigationBar={navigationBar}
-        renderScene={this.renderScene}
-        onDidFocus={this.onDidFocus}
+        renderScene={this.renderScene.bind(this)}
+        onDidFocus={this.onDidFocus.bind(this)}
+        onWillFocus={this.onWillFocus.bind(this)}
         configureScene={(route) => {
             return sceneConfig;
         }}
       />
-    )
+    );
   }
-});
+}
 
 var styles = StyleSheet.create({
   container: {
@@ -233,6 +209,5 @@ var styles = StyleSheet.create({
     backgroundColor: '#FFFFFF'
   },
 });
-
 
 module.exports = Router;

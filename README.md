@@ -89,6 +89,7 @@ The **`<Router \>`** object used to initialize the navigation can take the follo
 - `backButtonComponent`: By default, the navigation bar will display a simple "Back" text for the back button. To change this, you can specify your own backButton component (like in the Twitter app).
 - `rightCorner`: If you have the same occuring action buttons on the right side of your navigation bar (like the Twitter "Compose"-button), you can specify a component for that view.
 - `customAction`: A special callback prop for your action buttons (this can be handy for triggering a side menu for example). The action gets triggered from your custom `leftCorner` or `rightCorner` components by calling `this.props.customAction("someActionName")` from them. It is then picked up like this: `<Router customAction={this.doSomething} />`.
+- `hideNavigationBar`: Hide the navigation bar, always
 
 The **`this.props.toRoute()`** callback prop takes one parameter (a JavaScript object) which can have the following keys:
 - `name`: The name of your route, which will be shown as the title of the navigation bar unless it is changed.
@@ -96,18 +97,45 @@ The **`this.props.toRoute()`** callback prop takes one parameter (a JavaScript o
 - `leftCorner`: Specify a component to render on the left side of the navigation bar (like the "Add people"-button on the first page of the Twitter app)
 - `rightCorner`: Specify a component to render on the right side of the navigation bar
 - `titleComponent`: Specify a component to replace the title. This could for example be your logo (as in the first page of the Instagram app)
-- `headerStyle`: change the style of your header for the new route. You could for example specify a new backgroundColor and the router will automatically make a nice transition from one color to the other!
+- `headerStyle`: Change the style of your header for the new route. You could for example specify a new backgroundColor and the router will automatically make a nice transition from one color to the other!
 - `passProps`: Takes in an object. Passes each `key: value` pair to your component as a prop. i.e. <Component key={value} />
-- `trans`: if you set trans to `true` it will make the navbar transparent and move your component content so that it sits behind the nav.
-- `leftCornerProps`: if you set a `leftCorner` component you can use this property to pass props to that component.
-- `rightCornerProps`: if you set a `rightCorner` component you can use this property to pass props to that component.
+- `trans`: If set to a truthy value it will make the navbar transparent and move your component content so that it sits behind the nav.
+- `hideNavigationBar`: If set to a truthy value will hide the navigationbar out of view, and move the component so that it is at the top of the screen.
+- `leftCornerProps`: If you set a `leftCorner` component you can use this property to pass props to that component.
+- `rightCornerProps`: If you set a `rightCorner` component you can use this property to pass props to that component.
+- `sceneConfig`: Control the animation of the route being switched. Possible values are:
+  - Navigator.SceneConfigs.FadeAndroid
+  - Navigator.SceneConfigs.FloatFromBottom
+  - Navigator.SceneConfigs.FloatFromBottomAndroid
+  - Navigator.SceneConfigs.FloatFromLeft
+  - Navigator.SceneConfigs.FloatFromRight
+  - Navigator.SceneConfigs.HorizontalSwipeJump
+  - Navigator.SceneConfigs.PushFromRight
+  - Navigator.SceneConfigs.VerticalDownSwipeJump
+  - Navigator.SceneConfigs.VerticalUpSwipeJump
 
 The **`this.props.replaceRoute`**  takes in an object that can contain the same keys as `toRoute()`. The difference is that instead of adding a route to your stack, it replaces the route
 that you're on with the new route that you pass it.
 - This is useful for login or signup screens. If you don't want your user to be able to navigate back to it, then use `replaceRoute()` rather than `toRoute()`.
 
+The **`this.props.resetToRoute`**  takes in an object that can contain the same keys as `toRoute()`. The difference is that instead of adding a route to your stack, it replaces the route
+that you're on with the new route that you pass it, and empties the navigation stack as well.
+- This is useful for going to an application after a login or signup screens. If you don't want your user to be able to navigate back to it, then use `resetToRoute()` rather than `replaceRoute()`.
+
 The **`this.props.setRightProps`** and **`this.props.setLeftProps`** take in an object of props and sends that to your navbar's `RightComponent` and `LeftComponent`.
 - This allows you to talk directly to your navbar, because previously you could only talk to it when navigating forward or backward.
+
+
+Events emitted by the router:
+  `didFocus`, emits route name
+  You can add a listener to a component as such:
+
+```javascript
+  	this.props.routeEmitter.addListener('didFocus', (name) => {
+			//Check if name is the current component, and if it is, act on this focus event.
+		});
+```
+
 
 
 A more advanced example: Twitter app

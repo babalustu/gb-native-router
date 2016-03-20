@@ -124,7 +124,7 @@ class Router extends React.Component{
     } else if (this.props.hideNavigationBar || route.hideNavigationBar) {
       margin = this.props.noStatusBar ? 0 : 20;
     } else {
-      margin = 64;
+      margin = Platform.OS === 'ios' ? 64 : 56;
     }
 
     return (

@@ -6,7 +6,8 @@ var NavBarContent = require('./NavBarContent');
 
 var {
   StyleSheet,
-  View
+  View,
+    Platform
 } = React;
 
 var NavBarContainer = React.createClass({
@@ -115,7 +116,7 @@ var styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 64
+    height: Platform.OS === 'ios' ? 64 : 56
   },
   navbarContainerHidden: {
     position: 'absolute',

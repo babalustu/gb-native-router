@@ -8,7 +8,8 @@ var {
   Text,
   View,
   Animated,
-  Easing
+  Easing,
+    Platform
 } = React;
 
 var NavBarContent = React.createClass({
@@ -148,17 +149,17 @@ var styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 64, // Default iOS navbar height
+    height: Platform.OS === 'ios' ? 64 : 56, // Default iOS navbar height
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    paddingTop: 13
+    paddingTop: Platform.OS === 'ios' ? 13 : 3
   },
   navbarText: {
     color: 'white',
     fontSize: 17,
     margin: 10,
-    marginTop: 14,
+    marginTop: Platform.OS === 'ios' ? 14 : 3,
     fontWeight: '600',
     textAlign: 'center',
     alignItems: 'center',
